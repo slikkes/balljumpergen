@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+</head>
+<body style="display:flex; justify-content: center;">
+	<div style="display: flex;">
+		<div style="display: flex; flex-direction: column; justify-content: center; padding: 0 6px;">
+			<input type="number" step="1" min="1" value="16" onchange="setWidth(event.target.value)">
+			<input type="number" step="1" min="1" value="16" onchange="setHeight(event.target.value)">
+
+			<select id="blocktype-select" onchange="setBlockType(event.target.value)"></select>
+		</div>
+		<div id="cells"></div>
+
+		<div style="display: flex; flex-direction: column; justify-content: center; padding: 0 6px;">
+			<textarea id="output" style="height: 100%;width: 670px;"></textarea>
+			<button type="button" onclick="updateOutputData()">generate</button>
+		</div>
+	</div>
+
+	<script>
+		class Cell{
+			pos={x:0,y:1};
+			_id=null;
+			type="empty"
+			constructor(pos){
+				this.pos=pos;
+				this._procId()
+			}
+			create(){
+				let rowId = `cell-row-${this.pos.y}`
+				if(!document.getElementById(rowId)){
+					document.getElementById("cells").innerHTML += `
+					<div class="row" id="${rowId}"></div>
+				`
+				}
+				document.getElementById(rowId).innerHTML += `
+					<div class="cell empty" id="${this._id}"
+					onmousedown="cellClicked('${this._id}')"
+						ondragstart="cellClicked('${this._id}')"
+						ondragover="cellClicked('${this._id}')"></div>
+				`
+			}
+			updateStyle(c){
+				this.type = c;
+				document.getElementById(this._id).className = `cell ${c}`
+			}
+			_procId(){
+				this._id = `${this.pos.x}-${this.pos.y}`;
+			}
+		}
+	</script>
+	<script>
+
+		let width = 16;
+		let height = 9;
+		let cells = [];
+		const blockTypes = [{id:"empty",label:"empty"},{id:"platform",label:"platform"},{id:"redgem",label:"red gem"},{id:"bluegem",label:"blue gem"},{id:"goldgem",label:"gold gem"}]
+		let blockType = blockTypes[0].id;
+
+
+		addBlockTypeOptions();
+		createCells()
+
+		function createCells(){
+			document.getElementById("cells").innerHTML = "";
+			for(i=0;i<width;i++){
+				for(j=0;j<height;j++){
+					let cell = new Cell({x:i,y:j})
+					cells.push(cell);
+					cell.create()
+				}
+			}
+		}
+
+		function addBlockTypeOptions(){
+
+			blockTypes.forEach(bType => {
+				document.getElementById("blocktype-select").innerHTML+=`
+					<option value="${bType.id}">${bType.label}</option>
+				`
+			})
+			
+		}
+
+		function updateOutputData(){
+			let data = getCellData()
+			document.getElementById("output").value=JSON.stringify(data);
+		}
+		
+		function getCellData(){
+			return cells
+			.filter(i=>i.type  != 'empty')
+			.map(i=>{
+				return {
+					"type": i.type,
+					"variant": i.variant,
+					"pos": i.pos,
+					"width": 1
+				}
+			})
+			.sort((a,b)=>a.pos.y- b.pos.y)
+			.sort((a,b)=>a.pos.x- b.pos.x)
+			.reduce((c,item)=>{
+				let last = c[c.length-1]
+				if(last && last.type == item.type && last.variant == item.variant){
+					console.log(Math.abs(last.pos.x) - Math.abs( item.pos.x) ,Math.abs(last.pos.x) - Math.abs( item.pos.x) < 2)
+					if(last.pos.y == item.pos.y && Math.abs(last.pos.x - item.pos.x) <= last.width){
+						last.width ++;
+						return c;
+					}
+				}
+
+				 c.push(item);
+				 return c;
+			},[])
+		}
+
+		function cellClicked(cellId){
+			cells = cells.map(cell => {
+				if(cell._id == cellId){
+					cell.updateStyle(blockType)
+				}
+				return cell;
+			})
+		}
+		function setWidth(val){
+			width = val;
+			createCells()
+		}
+
+		function setHeight(val){
+			height = val;
+			createCells()
+		}
+
+		function setBlockType(val){
+			console.log(val)
+			blockType =  val;
+		}
+
+	</script>
+	<style>
+		.cells{
+			display: flex;
+			flex-direction: column;
+		}
+		.row{
+			display: flex;
+			flex-direction: row;
+		}
+		.cell{
+			width: 26px;
+			height: 26px;
+			cursor: pointer;
+		}
+		.empty{
+			background-color: #AABB33;
+			border:  1px solid #EE33CC;
+		}
+		.black{
+			background-color: black;
+			border:  1px solid #EE33CC;
+		}
+
+		.platform{
+			background-color: brown;
+			border:  1px solid #EE33CC;
+		}
+
+		.redgem{
+			background-color: red;
+			border:  1px solid #EE33CC;
+			content: "G";
+		}
+
+		.bluegem{
+			background-color: blue;
+			border:  1px solid #EE33CC;
+			content: "G";
+		}
+		.goldgem{
+			background-color: yellow;
+			border:  1px solid #EE33CC;
+			content: "G";
+		}
+
+	</style>
+</body>
+</html>
