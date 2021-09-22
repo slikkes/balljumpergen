@@ -7,8 +7,8 @@
 <body style="display:flex; justify-content: center;">
 	<div style="display: flex;">
 		<div style="display: flex; flex-direction: column; justify-content: center; padding: 0 6px;">
-			<input type="number" step="1" min="1" value="16" onchange="setWidth(event.target.value)">
-			<input type="number" step="1" min="1" value="16" onchange="setHeight(event.target.value)">
+			<input type="number" step="1" min="1" value="40" onchange="setWidth(event.target.value)">
+			<input type="number" step="1" min="1" value="15" onchange="setHeight(event.target.value)">
 
 			<select id="blocktype-select" onchange="setBlockType(event.target.value)"></select>
 		</div>
@@ -25,6 +25,7 @@
 			pos={x:0,y:1};
 			_id=null;
 			type="empty"
+			variant=null;
 			constructor(pos){
 				this.pos=pos;
 				this._procId()
@@ -43,9 +44,11 @@
 						ondragover="cellClicked('${this._id}')"></div>
 				`
 			}
-			updateStyle(c){
-				this.type = c;
-				document.getElementById(this._id).className = `cell ${c}`
+			updateStyle(type){
+				let t = type.split("-")
+				this.type = t[0];
+				this.variant = t[1] ?? null;
+				document.getElementById(this._id).className = `cell ${type}`
 			}
 			_procId(){
 				this._id = `${this.pos.x}-${this.pos.y}`;
@@ -54,10 +57,10 @@
 	</script>
 	<script>
 
-		let width = 16;
-		let height = 9;
+		let width = 40;
+		let height = 15;
 		let cells = [];
-		const blockTypes = [{id:"empty",label:"empty"},{id:"platform",label:"platform"},{id:"redgem",label:"red gem"},{id:"bluegem",label:"blue gem"},{id:"goldgem",label:"gold gem"}]
+		const blockTypes = [{id:"empty",label:"empty"},{id:"platform-dirt",label:"platform"},{id:"gem-red",label:"red gem"},{id:"gem-blue",label:"blue gem"},{id:"gem-gold",label:"gold gem"}]
 		let blockType = blockTypes[0].id;
 
 
@@ -86,35 +89,41 @@
 		}
 
 		function updateOutputData(){
-			let data = getCellData()
+			let data = {
+				height: round(height / 4),
+				elements: getCellData()
+			}
+
 			document.getElementById("output").value=JSON.stringify(data);
 		}
 		
 		function getCellData(){
+			//corect types and add variants
+			//chunk height
 			return cells
 			.filter(i=>i.type  != 'empty')
+			.sort((a,b) => (10 * a.pos.y + a.pos.x) - (10 * b.pos.y + b.pos.x))
 			.map(i=>{
+				let pos = {x:round(i.pos.x/5 -4), y: round(i.pos.y/5)}
 				return {
 					"type": i.type,
 					"variant": i.variant,
-					"pos": i.pos,
+					"pos": pos,
 					"width": 1
 				}
 			})
-			.sort((a,b)=>a.pos.y- b.pos.y)
-			.sort((a,b)=>a.pos.x- b.pos.x)
 			.reduce((c,item)=>{
 				let last = c[c.length-1]
 				if(last && last.type == item.type && last.variant == item.variant){
-					console.log(Math.abs(last.pos.x) - Math.abs( item.pos.x) ,Math.abs(last.pos.x) - Math.abs( item.pos.x) < 2)
-					if(last.pos.y == item.pos.y && Math.abs(last.pos.x - item.pos.x) <= last.width){
+					
+					if(last.pos.y == item.pos.y && Math.abs(last.pos.x - item.pos.x) <= last.width * 0.21){
 						last.width ++;
 						return c;
 					}
 				}
 
-				 c.push(item);
-				 return c;
+				c.push(item);
+				return c;
 			},[])
 		}
 
@@ -140,6 +149,9 @@
 			console.log(val)
 			blockType =  val;
 		}
+		function round(num){
+			return Math.round(num * 100) / 100
+		}
 
 	</script>
 	<style>
@@ -152,8 +164,8 @@
 			flex-direction: row;
 		}
 		.cell{
-			width: 26px;
-			height: 26px;
+			width: 18px;
+			height: 18px;
 			cursor: pointer;
 		}
 		.empty{
@@ -165,23 +177,23 @@
 			border:  1px solid #EE33CC;
 		}
 
-		.platform{
+		.platform-dirt{
 			background-color: brown;
 			border:  1px solid #EE33CC;
 		}
 
-		.redgem{
+		.gem-red{
 			background-color: red;
 			border:  1px solid #EE33CC;
 			content: "G";
 		}
 
-		.bluegem{
+		.gem-blue{
 			background-color: blue;
 			border:  1px solid #EE33CC;
 			content: "G";
 		}
-		.goldgem{
+		.gem-gold{
 			background-color: yellow;
 			border:  1px solid #EE33CC;
 			content: "G";
