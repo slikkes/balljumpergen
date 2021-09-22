@@ -39,9 +39,10 @@
 				}
 				document.getElementById(rowId).innerHTML += `
 					<div class="cell empty" id="${this._id}"
-					onmousedown="cellClicked('${this._id}')"
-						ondragstart="cellClicked('${this._id}')"
-						ondragover="cellClicked('${this._id}')"></div>
+					onmousedown="cellClicked('${this._id}')" 
+					onmouseover="cellHovered(event,'${this._id}')"
+					onmousedrag="cellHovered(event,'${this._id}')"
+					></div>
 				`
 			}
 			updateStyle(type){
@@ -104,11 +105,12 @@
 			.filter(i=>i.type  != 'empty')
 			.sort((a,b) => (10 * a.pos.y + a.pos.x) - (10 * b.pos.y + b.pos.x))
 			.map(i=>{
-				let pos = {x:round(i.pos.x/5 -4), y: round(i.pos.y/5)}
+				let x = round(i.pos.x/5 -4);
+				let y = round((i.pos.y/-5) + (height / 5))
 				return {
 					"type": i.type,
 					"variant": i.variant,
-					"pos": pos,
+					"pos": {x,y},
 					"width": 1
 				}
 			})
@@ -135,6 +137,14 @@
 				return cell;
 			})
 		}
+
+		function cellHovered(event, cellId){
+console.log(event.buttons)
+			if(event.buttons == 1){
+				cells.find(cell=>cell._id == cellId)?.updateStyle(blockType)
+			}
+		}
+
 		function setWidth(val){
 			width = val;
 			createCells()
