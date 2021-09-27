@@ -58,11 +58,12 @@
 	</script>
 	<script>
 
-		let width = 40;
-		let height = 15;
+		let width = 20;
+		let height = 30;
 		let cells = [];
-		const blockTypes = [{id:"empty",label:"empty"},{id:"platform-dirt",label:"platform"},{id:"gem-red",label:"red gem"},{id:"gem-blue",label:"blue gem"},{id:"gem-gold",label:"gold gem"}]
+		const blockTypes = [{id:"platform-dirt",label:"platform"},{id:"gem-red",label:"red gem"},{id:"gem-blue",label:"blue gem"},{id:"gem-gold",label:"gold gem"},{id:"empty",label:"empty"}]
 		let blockType = blockTypes[0].id;
+		let unitSize = 0.4;
 
 
 		addBlockTypeOptions();
@@ -90,8 +91,9 @@
 		}
 
 		function updateOutputData(){
+			const divider = 1 / unitSize;
 			let data = {
-				height: round(height / 4),
+				height: round(height / divider),
 				elements: getCellData()
 			}
 
@@ -99,14 +101,14 @@
 		}
 		
 		function getCellData(){
-			//corect types and add variants
-			//chunk height
+		
 			return cells
 			.filter(i=>i.type  != 'empty')
 			.sort((a,b) => (10 * a.pos.y + a.pos.x) - (10 * b.pos.y + b.pos.x))
 			.map(i=>{
-				let x = round(i.pos.x/5 -4);
-				let y = round((i.pos.y/-5) + (height / 5))
+				const divider = 1 / unitSize;
+				let x = round(i.pos.x/divider -4);
+				let y = round((height / divider) - (i.pos.y/divider))
 				return {
 					"type": i.type,
 					"variant": i.variant,
@@ -118,7 +120,7 @@
 				let last = c[c.length-1]
 				if(last && last.type == item.type && last.variant == item.variant){
 					
-					if(last.pos.y == item.pos.y && Math.abs(last.pos.x - item.pos.x) <= last.width * 0.21){
+					if(last.pos.y == item.pos.y && Math.abs(last.pos.x - item.pos.x) <= last.width * 0.41){
 						last.width ++;
 						return c;
 					}
